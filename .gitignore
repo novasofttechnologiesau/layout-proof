@@ -1,0 +1,6 @@
+node_modules/
+layout-proof-results/
+*.tgz
+.env
+.env.*
+playwright/.auth/

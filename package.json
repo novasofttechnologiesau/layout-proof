@@ -1,0 +1,13 @@
+{
+  "name": "layout-proof",
+  "version": "0.1.0",
+  "description": "Find responsive layout problems with element-level evidence and local HTML reports.",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=22" },
+  "bin": { "layout-proof": "bin/layout-proof.js" },
+  "exports": "./src/audit.js",
+  "files": ["bin/", "src/", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.md"],
+  "scripts": { "test": "node --test", "demo": "node examples/server.js", "check": "node --check bin/layout-proof.js && node --check src/audit.js && node --check src/inspect.js && node --check src/report.js" },
+  "dependencies": { "@axe-core/playwright": "4.13.0", "playwright": "1.63.0" }
+}
