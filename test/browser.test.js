@@ -47,6 +47,10 @@ test('real browser finds defects, excludes scroll regions, renders accessible re
     assert.ok(!ignored.findings.some(f => ['#tiny', '#wide'].includes(f.selector)));
     assert.ok(ignored.findings.some(f => f.rule === 'page-overflow'));
     await assert.rejects(page.evaluate(inspectLayout, { targetSize: 24, ignore: ['???'] }));
+    await page.goto(`${base}/clean`);
+    await page.locator('#demo-scroll').focus();
+    await page.keyboard.press('ArrowRight');
+    await page.waitForFunction(() => document.getElementById('demo-scroll').scrollLeft > 0);
     await page.close();
     const audited = await audit({ urls: [`${base}/clean`], widths: [375], themes: ['dark'], out, wait: 0, screenshots: false });
     assert.equal(audited.report.exitCode, 0, JSON.stringify(audited.report.runs, null, 2));
