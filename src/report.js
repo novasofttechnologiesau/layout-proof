@@ -1,0 +1,26 @@
+export const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+export function renderReport(report) {
+  const e = escapeHtml;
+  const count = report.runs.reduce((sum, run) => sum + run.findings.length, 0);
+  const errors = report.runs.filter(run => run.status === 'error').length;
+  return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<title>Layout Proof report</title><style>
+:root{color-scheme:light dark;--paper:oklch(0.98 0.005 285);--ink:oklch(0.25 0.01 285);--muted:oklch(0.46 0.01 285);--line:oklch(0.82 0.01 285);--link:oklch(0.42 0.16 285);--soft:oklch(0.94 0.008 285)}
+@media(prefers-color-scheme:dark){:root{--paper:oklch(0.2 0.008 285);--ink:oklch(0.93 0.006 285);--muted:oklch(0.76 0.01 285);--line:oklch(0.43 0.01 285);--link:oklch(0.82 0.1 285);--soft:oklch(0.26 0.008 285)}}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 system-ui,sans-serif}main{max-width:1080px;margin:auto;padding:40px 24px 80px}h1{font-size:2rem;margin:0 0 8px}h2{font-size:1.25rem;margin:0 0 8px}h3{font-size:1rem}p{max-width:72ch}a{color:var(--link);text-underline-offset:3px;overflow-wrap:anywhere}a:focus-visible,summary:focus-visible{outline:3px solid var(--link);outline-offset:4px}code{font-size:.875rem;overflow-wrap:anywhere;white-space:pre-wrap}header{padding-bottom:24px;border-bottom:1px solid var(--line)}.muted,small{color:var(--muted)}.eyebrow{font-size:.8rem;text-transform:uppercase;letter-spacing:.1em}.summary{font-size:1.125rem}nav{padding:20px 0}nav ul{padding-left:22px}nav li{padding:4px 0}section{padding:28px 0;border-top:1px solid var(--line);scroll-margin-top:16px}.url{margin:6px 0;overflow-wrap:anywhere}details{margin:20px 0;background:var(--soft);padding:14px 18px}summary{cursor:pointer;min-height:24px;font-weight:600}figure{margin:18px 0}img{display:block;width:auto;max-width:100%;height:auto;border:1px solid var(--line)}figcaption{margin-top:8px;color:var(--muted);font-size:.875rem}.findings{padding:0;list-style:none}.finding{padding:16px 0;border-bottom:1px solid var(--line)}.finding p{margin:6px 0}.rule{font-size:.8rem;text-transform:uppercase;letter-spacing:.025em}.selector{display:block;background:var(--soft);padding:10px 12px;margin-top:8px}footer{padding-top:24px;color:var(--muted)}@media(max-width:600px){main{padding:24px 16px 48px}h1{font-size:1.75rem}details{padding:12px}.summary{font-size:1rem}}@media print{details{display:block}nav{display:none}body{font-size:11pt}}
+</style></head><body><main><header><p class="eyebrow">Responsive layout evidence · v${e(report.toolVersion)}</p><h1>Layout Proof</h1>
+<p class="summary">${count} findings across ${report.runs.length} runs · ${errors} execution errors</p>
+<p class="muted">${e(report.generatedAt)} · Chromium · reduced motion · ${report.options.a11y ? 'axe checks enabled' : 'axe checks disabled'}</p>
+<p>Findings are inspection prompts, not accessibility certification. Screenshots show the initial viewport; coordinates may refer to content below it.</p>
+<a href="report.json">Download JSON evidence</a></header>
+<nav aria-label="Viewport runs"><h2>Runs</h2><ul>${report.runs.map((run, i) => `<li><a href="#run-${i + 1}">${e(run.width)} × ${e(run.height)} · ${e(run.theme)} · ${e(run.url)}</a> <span class="muted">(${run.status === 'error' ? 'execution error' : `${run.findings.length} findings`})</span></li>`).join('')}</ul></nav>
+${report.runs.map((run, i) => `<section id="run-${i + 1}"><h2>${e(run.width)} × ${e(run.height)} <span class="muted">/ ${e(run.theme)}</span></h2><p class="url">${e(run.url)}</p>
+${run.finalUrl && run.finalUrl !== run.url ? `<p class="url muted">Redirected to ${e(run.finalUrl)}</p>` : ''}
+${run.error ? `<p><strong>Execution error.</strong> ${e(run.error)}</p><p>Any findings below are partial. This run did not complete.</p>` : ''}
+${run.accessibility?.incomplete ? `<p class="muted">${e(run.accessibility.incomplete)} axe checks need manual review.</p>` : ''}
+${run.screenshot && /^viewport-\d+\.png$/.test(run.screenshot) ? `<details><summary>View screenshot</summary><figure><img src="${e(run.screenshot)}" alt="Audited page at ${e(run.width)} pixels wide in ${e(run.theme)} mode" loading="lazy"><figcaption>Initial viewport. No annotations were added to the inspected page.</figcaption></figure></details>` : ''}
+${run.findings.length ? `<ol class="findings">${run.findings.map(f => `<li class="finding"><div class="rule">${e(f.severity)} · ${e(f.rule)}</div><p>${e(f.message)}</p><code class="selector">${e(f.selector)}</code>${f.bounds ? `<p><small>Bounds: x ${e(f.bounds.x)}, y ${e(f.bounds.y)} · ${e(f.bounds.width)} × ${e(f.bounds.height)}px</small></p>` : ''}</li>`).join('')}</ol>` : run.status === 'complete' ? '<p>No findings from the enabled checks.</p>' : ''}</section>`).join('')}
+<footer>Generated locally by Layout Proof. This report does not load scripts, analytics, or remote assets.</footer></main></body></html>`;
+}
