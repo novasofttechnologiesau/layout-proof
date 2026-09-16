@@ -49,7 +49,7 @@ test('real browser finds defects, excludes scroll regions, renders accessible re
     await assert.rejects(page.evaluate(inspectLayout, { targetSize: 24, ignore: ['???'] }));
     await page.close();
     const audited = await audit({ urls: [`${base}/clean`], widths: [375], themes: ['dark'], out, wait: 0, screenshots: false });
-    assert.equal(audited.report.exitCode, 0);
+    assert.equal(audited.report.exitCode, 0, JSON.stringify(audited.report.runs, null, 2));
     assert.ok(audited.report.runs[0].accessibility);
     const child = spawn(process.execPath, ['bin/layout-proof.js', `${base}/broken`, '--widths', '375', '--themes', 'light', '--no-a11y', '--no-screenshots', '--wait', '0', '--out', out]);
     let stdout = ''; child.stdout.on('data', data => stdout += data); child.stderr.resume();
